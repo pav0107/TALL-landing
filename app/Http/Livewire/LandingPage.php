@@ -4,7 +4,8 @@ namespace App\Http\Livewire;
 
 use Livewire\Component;
 use App\Models\Subscriber;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Auth\Notifications\VerifyEmail;
 
 class LandingPage extends Component
 {
@@ -17,10 +18,18 @@ class LandingPage extends Component
     public function subscribe()
     {
         $this->validate();
+
+        DB::transaction(function () {
+            $subscriber = Subscriber::create([
+                'email' => $this->email,
+            ]);
+
+            $notification = new VerifyEmail;
+
+            $subscriber->notify($notification);
+        }, $deadlockRestries = 5);
+
         
-        $subscriber = Subscriber::create([
-            'email' => $this->email,
-        ]);
 
         $this->reset('email');
     }
